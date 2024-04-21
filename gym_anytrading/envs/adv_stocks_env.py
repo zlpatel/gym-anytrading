@@ -1,5 +1,5 @@
 import numpy as np
-from .adv_trading_env import AdvTradingEnv, AdvAdvActions, AdvAdvPositions
+from .adv_trading_env import AdvTradingEnv, AdvActions, AdvPositions
 
 
 class AdvStocksEnv(AdvTradingEnv):
