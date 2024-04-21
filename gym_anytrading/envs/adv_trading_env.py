@@ -57,7 +57,7 @@ def transform(position: AdvPositions, action: int):
     return position, False
 
 
-class TradingEnv(gym.Env):
+class AdvTradingEnv(gym.Env):
 
     metadata = {'render_modes': ['human'], 'render_fps': 3}
 
