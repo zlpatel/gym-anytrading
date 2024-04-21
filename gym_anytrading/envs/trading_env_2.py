@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import gymnasium as gym
 
 
-class Actions(int, Enum):
+class Actions2(int, Enum):
     DOUBLE_SELL = 0
     SELL = 1
     HOLD = 2
@@ -15,44 +15,44 @@ class Actions(int, Enum):
     DOUBLE_BUY = 4
 
 
-class Positions(int, Enum):
+class Positions2(int, Enum):
     SHORT = -1.
     FLAT = 0.
     LONG = 1.
 
-def transform(position: Positions, action: int) -> Any:
+def transform(position: Positions2, action: int) -> Any:
     '''
     Overview:
         used by env.tep().
         This func is used to transform the env's position from
         the input (position, action) pair according to the status machine.
     Arguments:
-        - position(Positions) : Long, Short or Flat
+        - position(Positions2) : Long, Short or Flat
         - action(int) : Doulbe_Sell, Sell, Hold, Buy, Double_Buy
     Returns:
-        - next_position(Positions) : the position after transformation.
+        - next_position(Positions2) : the position after transformation.
     '''
-    if action == Actions.SELL:
+    if action == Actions2.SELL:
 
-        if position == Positions.LONG:
-            return Positions.FLAT, False
+        if position == Positions2.LONG:
+            return Positions2.FLAT, False
 
-        if position == Positions.FLAT:
-            return Positions.SHORT, True
+        if position == Positions2.FLAT:
+            return Positions2.SHORT, True
 
-    if action == Actions.BUY:
+    if action == Actions2.BUY:
 
-        if position == Positions.SHORT:
-            return Positions.FLAT, False
+        if position == Positions2.SHORT:
+            return Positions2.FLAT, False
 
-        if position == Positions.FLAT:
-            return Positions.LONG, True
+        if position == Positions2.FLAT:
+            return Positions2.LONG, True
 
-    if action == Actions.DOUBLE_SELL and (position == Positions.LONG or position == Positions.FLAT):
-        return Positions.SHORT, True
+    if action == Actions2.DOUBLE_SELL and (position == Positions2.LONG or position == Positions2.FLAT):
+        return Positions2.SHORT, True
 
-    if action == Actions.DOUBLE_BUY and (position == Positions.SHORT or position == Positions.FLAT):
-        return Positions.LONG, True
+    if action == Actions2.DOUBLE_BUY and (position == Positions2.SHORT or position == Positions2.FLAT):
+        return Positions2.LONG, True
 
     return position, False
 
@@ -73,7 +73,7 @@ class TradingEnv2(gym.Env):
         self.shape = (window_size, self.signal_features.shape[1])
 
         # spaces
-        self.action_space = gym.spaces.Discrete(len(Actions))
+        self.action_space = gym.spaces.Discrete(len(Actions2))
         INF = 1e10
         self.observation_space = gym.spaces.Box(
             low=-INF, high=INF, shape=self.shape, dtype=np.float32,
@@ -99,7 +99,7 @@ class TradingEnv2(gym.Env):
         self._truncated = False
         self._current_tick = self._start_tick
         self._last_trade_tick = self._current_tick - 1
-        self._position = Positions.FLAT
+        self._position = Positions2.FLAT
         self._position_history = (self.window_size * [None]) + [self._position]
         self._total_reward = 0.
         self._total_profit = 1.  # unit
@@ -177,9 +177,9 @@ class TradingEnv2(gym.Env):
 
         def _plot_position(position, tick):
             color = None
-            if position == Positions.SHORT:
+            if position == Positions2.SHORT:
                 color = 'red'
-            elif position == Positions.LONG:
+            elif position == Positions2.LONG:
                 color = 'green'
             if color:
                 plt.scatter(tick, self.prices[tick], color=color)
@@ -216,9 +216,9 @@ class TradingEnv2(gym.Env):
         long_ticks = []
         flat_ticks = []
         for i, tick in enumerate(window_ticks):
-            if self._position_history[i] == Positions.SHORT:
+            if self._position_history[i] == Positions2.SHORT:
                 short_ticks.append(tick)
-            elif self._position_history[i] == Positions.LONG:
+            elif self._position_history[i] == Positions2.LONG:
                 long_ticks.append(tick)
             else:
                 flat_ticks.append(tick)

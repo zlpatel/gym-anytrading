@@ -1,5 +1,5 @@
 import numpy as np
-from .trading_env_2 import TradingEnv2, Actions, Positions
+from .trading_env_2 import TradingEnv2, Actions2, Positions2
 
 
 class StocksEnv2(TradingEnv2):
@@ -88,16 +88,16 @@ class StocksEnv2(TradingEnv2):
         ratio = current_price / last_trade_price
         cost = np.log((1 - self.trade_fee_ask_percent) * (1 - self.trade_fee_bid_percent))
 
-        if action == Actions.BUY and self._position == Positions.SHORT:
+        if action == Actions2.BUY and self._position == Positions2.SHORT:
             step_reward = np.log(2 - ratio) + cost
 
-        if action == Actions.SELL and self._position == Positions.LONG:
+        if action == Actions2.SELL and self._position == Positions2.LONG:
             step_reward = np.log(ratio) + cost
 
-        if action == Actions.DOUBLE_SELL and self._position == Positions.LONG:
+        if action == Actions2.DOUBLE_SELL and self._position == Positions2.LONG:
             step_reward = np.log(ratio) + cost
 
-        if action == Actions.DOUBLE_BUY and self._position == Positions.SHORT:
+        if action == Actions2.DOUBLE_BUY and self._position == Positions2.SHORT:
             step_reward = np.log(2 - ratio) + cost
 
         step_reward = float(step_reward)
@@ -108,16 +108,16 @@ class StocksEnv2(TradingEnv2):
     def _update_profit(self, action):
         trade = False
         if (
-            (action == Actions.SELL and position == Positions.FLAT) or
-            (action == Actions.BUY and position == Positions.FLAT) or
-            (action == Actions.DOUBLE_SELL and (position == Positions.LONG or position == Positions.FLAT)) or
-            (action == Actions.DOUBLE_BUY and (position == Positions.SHORT or position == Positions.FLAT))):
+            (action == Actions2.SELL and position == Positions2.FLAT) or
+            (action == Actions2.BUY and position == Positions2.FLAT) or
+            (action == Actions2.DOUBLE_SELL and (position == Positions2.LONG or position == Positions2.FLAT)) or
+            (action == Actions2.DOUBLE_BUY and (position == Positions2.SHORT or position == Positions2.FLAT))):
                 trade = True
         if trade or self._truncated:
             current_price = self.prices[self._current_tick]
             last_trade_price = self.prices[self._last_trade_tick]
 
-            if self._position == Positions.LONG:
+            if self._position == Positions2.LONG:
                 shares = (self._total_profit * (1 - self.trade_fee_ask_percent)) / last_trade_price
                 self._total_profit = (shares * (1 - self.trade_fee_bid_percent)) * current_price
 
