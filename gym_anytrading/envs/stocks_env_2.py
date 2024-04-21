@@ -1,6 +1,5 @@
 import numpy as np
-
-from .trading_env import TradingEnv, Actions, Positions
+from .trading_env_2 import TradingEnv2, Actions, Positions
 
 
 class StocksEnv2(TradingEnv2):
