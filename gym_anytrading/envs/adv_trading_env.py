@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import gymnasium as gym
 
 
-class Actions2(int, Enum):
+class AdvActions(Enum):
     DOUBLE_SELL = 0
     SELL = 1
     HOLD = 2
@@ -15,49 +15,49 @@ class Actions2(int, Enum):
     DOUBLE_BUY = 4
 
 
-class Positions2(int, Enum):
+class AdvPositions(Enum):
     SHORT = -1.
     FLAT = 0.
     LONG = 1.
 
-def transform(position: Positions2, action: int):
+def transform(position: AdvPositions, action: int):
     '''
     Overview:
         used by env.tep().
         This func is used to transform the env's position from
         the input (position, action) pair according to the status machine.
     Arguments:
-        - position(Positions2) : Long, Short or Flat
+        - position(AdvPositions) : Long, Short or Flat
         - action(int) : Doulbe_Sell, Sell, Hold, Buy, Double_Buy
     Returns:
-        - next_position(Positions2) : the position after transformation.
+        - next_position(AdvPositions) : the position after transformation.
     '''
-    if action == Actions2.SELL:
+    if action == AdvActions.SELL.value:
 
-        if position == Positions2.LONG:
-            return Positions2.FLAT, False
+        if position == AdvPositions.LONG:
+            return AdvPositions.FLAT, False
 
-        if position == Positions2.FLAT:
-            return Positions2.SHORT, True
+        if position == AdvPositions.FLAT:
+            return AdvPositions.SHORT, True
 
-    if action == Actions2.BUY:
+    if action == AdvActions.BUY.value:
 
-        if position == Positions2.SHORT:
-            return Positions2.FLAT, False
+        if position == AdvPositions.SHORT:
+            return AdvPositions.FLAT, False
 
-        if position == Positions2.FLAT:
-            return Positions2.LONG, True
+        if position == AdvPositions.FLAT:
+            return AdvPositions.LONG, True
 
-    if action == Actions2.DOUBLE_SELL and (position == Positions2.LONG or position == Positions2.FLAT):
-        return Positions2.SHORT, True
+    if action == AdvActions.DOUBLE_SELL.value and (position == AdvPositions.LONG or position == AdvPositions.FLAT):
+        return AdvPositions.SHORT, True
 
-    if action == Actions2.DOUBLE_BUY and (position == Positions2.SHORT or position == Positions2.FLAT):
-        return Positions2.LONG, True
+    if action == AdvActions.DOUBLE_BUY.value and (position == AdvPositions.SHORT or position == AdvPositions.FLAT):
+        return AdvPositions.LONG, True
 
     return position, False
 
 
-class TradingEnv2(gym.Env):
+class TradingEnv(gym.Env):
 
     metadata = {'render_modes': ['human'], 'render_fps': 3}
 
@@ -73,7 +73,7 @@ class TradingEnv2(gym.Env):
         self.shape = (window_size, self.signal_features.shape[1])
 
         # spaces
-        self.action_space = gym.spaces.Discrete(len(Actions2))
+        self.action_space = gym.spaces.Discrete(len(AdvActions))
         INF = 1e10
         self.observation_space = gym.spaces.Box(
             low=-INF, high=INF, shape=self.shape, dtype=np.float32,
@@ -99,7 +99,7 @@ class TradingEnv2(gym.Env):
         self._truncated = False
         self._current_tick = self._start_tick
         self._last_trade_tick = self._current_tick - 1
-        self._position = Positions2.FLAT
+        self._position = AdvPositions.FLAT
         self._position_history = (self.window_size * [None]) + [self._position]
         self._total_reward = 0.
         self._total_profit = 1.  # unit
@@ -124,20 +124,6 @@ class TradingEnv2(gym.Env):
         step_reward = self._calculate_reward(action)
         self._total_reward += step_reward
 
-        '''
-        self._update_profit(action)
-        trade = False
-        if (
-            (action == Actions.Buy.value and self._position == Positions.Short) or
-            (action == Actions.Sell.value and self._position == Positions.Long)
-        ):
-            trade = True
-
-        if trade:
-            self._position = self._position.opposite()
-            self._last_trade_tick = self._current_tick
-
-        '''
         self._update_profit(action)
         self._position, trade = transform(self._position, action)
         if trade:
@@ -157,7 +143,8 @@ class TradingEnv2(gym.Env):
         return dict(
             total_reward=self._total_reward,
             total_profit=self._total_profit,
-            position=self._position
+            position=self._position,
+            max_possible_profit=np.log(self.max_possible_profit())
         )
 
     def _get_observation(self):
@@ -177,9 +164,9 @@ class TradingEnv2(gym.Env):
 
         def _plot_position(position, tick):
             color = None
-            if position == Positions2.SHORT:
+            if position == AdvPositions.SHORT:
                 color = 'red'
-            elif position == Positions2.LONG:
+            elif position == AdvPositions.LONG:
                 color = 'green'
             if color:
                 plt.scatter(tick, self.prices[tick], color=color)
@@ -216,16 +203,17 @@ class TradingEnv2(gym.Env):
         long_ticks = []
         flat_ticks = []
         for i, tick in enumerate(window_ticks):
-            if self._position_history[i] == Positions2.SHORT:
+            if self._position_history[i] == AdvPositions.SHORT:
                 short_ticks.append(tick)
-            elif self._position_history[i] == Positions2.LONG:
+            elif self._position_history[i] == AdvPositions.LONG:
                 long_ticks.append(tick)
             else:
                 flat_ticks.append(tick)
 
-        plt.plot(short_ticks, self.prices[short_ticks], 'ro')
-        plt.plot(long_ticks, self.prices[long_ticks], 'go')
-        plt.plot(flat_ticks, self.prices[flat_ticks], 'bo')
+        plt.plot(long_ticks, self.prices[long_ticks], 'g^', markersize=3, label="Long")
+        plt.plot(flat_ticks, self.prices[flat_ticks], 'bo', markersize=3, label="Flat")
+        plt.plot(short_ticks, self.prices[short_ticks], 'rv', markersize=3, label="Short")
+        plt.legend(loc='upper left', bbox_to_anchor=(0.05, 0.95))
 
         if title:
             plt.title(title)

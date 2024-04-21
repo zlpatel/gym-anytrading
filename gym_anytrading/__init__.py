@@ -25,8 +25,8 @@ register(
 )
 
 register(
-    id='stocks2-v0',
-    entry_point='gym_anytrading.envs.stocks_env_2:StocksEnv2',
+    id='adv-stocks-v0',
+    entry_point='gym_anytrading.envs:AdvStocksEnv',
     kwargs={
         'df': deepcopy(datasets.STOCKS_GOOGL),
         'window_size': 30,

@@ -1,8 +1,8 @@
 import numpy as np
-from .trading_env_2 import TradingEnv2, Actions2, Positions2
+from .adv_trading_env import AdvTradingEnv, AdvAdvActions, AdvAdvPositions
 
 
-class StocksEnv2(TradingEnv2):
+class AdvStocksEnv(AdvTradingEnv):
 
     def __init__(self, df, window_size, frame_bound, render_mode=None):
         assert len(frame_bound) == 2
@@ -21,14 +21,21 @@ class StocksEnv2(TradingEnv2):
 
         diff = np.insert(np.diff(prices), 0, 0)
 
-        all_feature = {k: self.df.loc[:, k].to_numpy() for k in self.df.columns if ("feature" || "Close" || "Volume" in k)}
-        all_feature[self.frame_bound[0] - self.window_size]  # validate index (TODO: Improve validation)
-        all_feature = all_feature[self.frame_bound[0]-self.window_size:self.frame_bound[1]]
-        all_feature['Diff'] = diff
+        features_columns = [col for col in self.df.columns if "feature" in col]
+        all_features_columns = ["Close", "Open", "High", "Low", "Volume"] + list(features_columns)
+
+        #self.df['Diff'] = diff
+        #all_features = {k: self.df.loc[:, k].to_numpy() for k in features_columns}
+        #print(all_features)
+        all_features = np.array(self.df[all_features_columns], dtype= np.float32)
+        all_features[self.frame_bound[0] - self.window_size]  # validate index (TODO: Improve validation)
+        all_features = all_features[self.frame_bound[0]-self.window_size:self.frame_bound[1]]
+        #all_features['Diff'] = diff
         #signal_features = np.column_stack((prices, diff))
-
-        signal_features = np.column_stack([all_feature[k] for k in range(all_feature.shape[1])])
-
+        
+        #signal_features = np.column_stack([all_features[k] for k in range(all_features.shape[0])])
+        signal_features = all_features
+        
         return prices.astype(np.float32), signal_features.astype(np.float32)
 
         #TODO: handle additional features
@@ -67,8 +74,8 @@ class StocksEnv2(TradingEnv2):
 
         trade = False
         if (
-            (action == Actions.Buy.value and self._position == Positions.Short) or
-            (action == Actions.Sell.value and self._position == Positions.Long)
+            (action == AdvActions.Buy.value and self._position == AdvPositions.Short) or
+            (action == AdvActions.Sell.value and self._position == AdvPositions.Long)
         ):
             trade = True
 
@@ -77,7 +84,7 @@ class StocksEnv2(TradingEnv2):
             last_trade_price = self.prices[self._last_trade_tick]
             price_diff = current_price - last_trade_price
 
-            if self._position == Positions.Long:
+            if self._position == AdvPositions.Long:
                 step_reward += price_diff
 
         return step_reward
@@ -88,16 +95,16 @@ class StocksEnv2(TradingEnv2):
         ratio = current_price / last_trade_price
         cost = np.log((1 - self.trade_fee_ask_percent) * (1 - self.trade_fee_bid_percent))
 
-        if action == Actions2.BUY and self._position == Positions2.SHORT:
+        if action == AdvActions.BUY.value and self._position == AdvPositions.SHORT:
             step_reward = np.log(2 - ratio) + cost
 
-        if action == Actions2.SELL and self._position == Positions2.LONG:
+        if action == AdvActions.SELL.value and self._position == AdvPositions.LONG:
             step_reward = np.log(ratio) + cost
 
-        if action == Actions2.DOUBLE_SELL and self._position == Positions2.LONG:
+        if action == AdvActions.DOUBLE_SELL.value and self._position == AdvPositions.LONG:
             step_reward = np.log(ratio) + cost
 
-        if action == Actions2.DOUBLE_BUY and self._position == Positions2.SHORT:
+        if action == AdvActions.DOUBLE_BUY.value and self._position == AdvPositions.SHORT:
             step_reward = np.log(2 - ratio) + cost
 
         step_reward = float(step_reward)
@@ -108,16 +115,16 @@ class StocksEnv2(TradingEnv2):
     def _update_profit(self, action):
         trade = False
         if (
-            (action == Actions2.SELL and position == Positions2.FLAT) or
-            (action == Actions2.BUY and position == Positions2.FLAT) or
-            (action == Actions2.DOUBLE_SELL and (position == Positions2.LONG or position == Positions2.FLAT)) or
-            (action == Actions2.DOUBLE_BUY and (position == Positions2.SHORT or position == Positions2.FLAT))):
+            (action == AdvActions.SELL.value and self._position == AdvPositions.FLAT) or
+            (action == AdvActions.BUY.value and self._position == AdvPositions.FLAT) or
+            (action == AdvActions.DOUBLE_SELL.value and (self._position == AdvPositions.LONG or self._position == AdvPositions.FLAT)) or
+            (action == AdvActions.DOUBLE_BUY.value and (self._position == AdvPositions.SHORT or self._position == AdvPositions.FLAT))):
                 trade = True
         if trade or self._truncated:
             current_price = self.prices[self._current_tick]
             last_trade_price = self.prices[self._last_trade_tick]
 
-            if self._position == Positions2.LONG:
+            if self._position == AdvPositions.LONG:
                 shares = (self._total_profit * (1 - self.trade_fee_ask_percent)) / last_trade_price
                 self._total_profit = (shares * (1 - self.trade_fee_bid_percent)) * current_price
 
