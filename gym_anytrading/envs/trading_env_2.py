@@ -20,7 +20,7 @@ class Positions2(int, Enum):
     FLAT = 0.
     LONG = 1.
 
-def transform(position: Positions2, action: int) -> Any:
+def transform(position: Positions2, action: int):
     '''
     Overview:
         used by env.tep().
