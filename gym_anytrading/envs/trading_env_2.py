@@ -250,10 +250,8 @@ class TradingEnv2(gym.Env):
     def _calculate_reward(self, action):
         raise NotImplementedError
 
-    '''
     def _update_profit(self, action):
         raise NotImplementedError
-    '''
     
     def max_possible_profit(self):  # trade fees are ignored
         raise NotImplementedError
