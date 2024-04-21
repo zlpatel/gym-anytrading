@@ -23,3 +23,13 @@ register(
         'frame_bound': (30, len(datasets.STOCKS_GOOGL))
     }
 )
+
+register(
+    id='stocks-v2',
+    entry_point='gym_anytrading.envs:StocksEnv2',
+    kwargs={
+        'df': deepcopy(datasets.STOCKS_GOOGL),
+        'window_size': 30,
+        'frame_bound': (30, len(datasets.STOCKS_GOOGL))
+    }
+)
