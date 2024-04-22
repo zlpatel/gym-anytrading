@@ -125,8 +125,13 @@ class AdvStocksEnv(AdvTradingEnv):
             last_trade_price = self.prices[self._last_trade_tick]
 
             if self._position == AdvPositions.LONG:
-                shares = (self._total_profit * (1 - self.trade_fee_ask_percent)) / last_trade_price
-                self._total_profit = (shares * (1 - self.trade_fee_bid_percent)) * current_price
+                #shares = (self._total_profit * (1 - self.trade_fee_ask_percent)) / last_trade_price
+                #self._total_profit = (shares * (1 - self.trade_fee_bid_percent)) * current_price
+                self._total_profit = self._total_profit * (current_price / last_trade_price) * (1 - self.trade_fee_ask_percent
+                                                                            ) * (1 - self.trade_fee_bid_percent)
+            if self._position == AdvPositions.SHORT:
+                self._total_profit = self._total_profit * (2 - (current_price / last_trade_price)) * (1 - self.trade_fee_ask_percent
+                                                                                  ) * (1 - self.trade_fee_bid_percent)
 
     def max_possible_profit(self):
         current_tick = self._start_tick
